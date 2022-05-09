@@ -39,11 +39,22 @@ O objetivo desse módulo é transformar o arquivo de consultas fornecido ao padr
                 a. Considerar qualquer coisa diferente de zero como um voto
 '''
 
+
 import re
 import csv
+import logging
 import xml.etree.ElementTree as ET
 
-with open("config/pc.cfg") as config_file:
+
+FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+conf_file = "pc.cfg"
+logging.basicConfig(filename="processador.log", level=logging.INFO, format=FORMAT)
+
+logging.info(f'Executando {__file__}')
+
+with open(f"config/{conf_file}") as config_file:
+    logging.info(f'Abrindo {conf_file}')
+
     for i, line in enumerate(config_file):
         if i == 0:
             leia = line.split('=')[1].rstrip()
@@ -51,10 +62,14 @@ with open("config/pc.cfg") as config_file:
             consultas = line.split('=')[1].rstrip()
         elif i == 2:
             esperados = line.split('=')[1].rstrip()
+        else:
+            logging.error(f'Erro ao ler {conf_file}')
+    logging.info(f'Fechando {conf_file}')
     
 with open(leia) as xml_file, \
     open(consultas, "w", newline='') as consulta_f, \
     open(esperados, "w", newline='') as esperado_f:
+    logging.info(f"Abrindo {leia}")
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
@@ -64,7 +79,12 @@ with open(leia) as xml_file, \
     esperado_w = csv.writer(esperado_f, delimiter=";")
     esperado_w.writerow(["QueryNumber", "DocNumber", "DocVotes"])
     
+    i = 0
     for query in root:
+        i += 1
+        if i % 10 == 0:
+            logging.info(f"{i} consultas processadas")
+        
         number = query.find("QueryNumber")
         text = query.find("QueryText")
         processed_text = re.sub('[^A-Z]', ' ', text.text.upper())
@@ -80,3 +100,5 @@ with open(leia) as xml_file, \
                     s += 1
             
             esperado_w.writerow([number.text, item.text, s])
+    logging.info(f"{i} consultas processadas")
+    logging.info(f"Fechando {leia}")
