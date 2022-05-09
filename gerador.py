@@ -31,42 +31,75 @@ mesmo número de vezes na lista
         i. FIBROSIS ; [1,2,2,3,4,5,10,15,21,21,21]
 '''
 
+from fileinput import filename
 import re
 import csv
+import logging
 import xml.etree.ElementTree as ET
 
 from collections import defaultdict
 
-min_length = 2
 
-with open("config/gli.cfg") as config_file:
-    d = defaultdict(list)
-    
-    for line in config_file:
-        inst = line.split('=')
-        if inst[0] == "LEIA":
-            with open(inst[1].rstrip()) as xml_file:
-                tree = ET.parse(xml_file)
-                root = tree.getroot()
-                
-                for record in root:
-                    record_num = int(record.find("RECORDNUM").text)
+FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+logging.basicConfig(filename="logs/gerador.log", level=logging.INFO, format=FORMAT)
+
+def read():
+    min_length = 2
+    conf_file = 'gli.cfg'
+
+    with open(f"config/{conf_file}") as config_file:
+        logging.info(f'Executando {__file__}')
+        gli_dict = defaultdict(list)
+        
+        for line in config_file:
+            inst = line.split('=')
+            if inst[0] == "LEIA":
+                filename = inst[1].rstrip()
+
+                with open(filename) as xml_file:
+                    logging.info(f'Processando {filename}')
+                    tree = ET.parse(xml_file)
+                    root = tree.getroot()
                     
-                    text_elem = record.find("ABSTRACT")
-                    if text_elem is None:
-                        text_elem = record.find("EXTRACT")
+                    for record in root:
+                        record_num = int(record.find("RECORDNUM").text)
                         
-                    if text_elem is not None:
-                        words = text_elem.text.upper()
-                        words = re.sub('[^A-Z]', ' ', words)
-                        words = words.split()
-                        words = [word for word in words if len(word) >= min_length]
-                        for word in words:
-                            d[word].append(record_num)
+                        text_elem = record.find("ABSTRACT")
+                        if text_elem is None:
+                            text_elem = record.find("EXTRACT")
+                            
+                        if text_elem is not None:
+                            words = text_elem.text.upper()
+                            words = re.sub('[^A-Z]', ' ', words)
+                            words = words.split()
+                            words = [word for word in words if len(word) >= min_length]
+                            for word in words:
+                                gli_dict[word].append(record_num)
+            elif inst[0] == "ESCREVA":
+                return inst[1], gli_dict
+            else:
+                logging.error("Erro ao ler {conf_file}")
 
-with open(inst[1], 'w', newline='') as csv_file:  
-    writer = csv.writer(csv_file, delimiter=";")
-    writer.writerow(["Word", "Documents"])
-    
-    for key, value in sorted(d.items()):
-        writer.writerow([key, value])
+def write(filename, gli_dict):
+    with open(filename, 'w', newline='') as csv_file:
+        logging.info(f'Abrindo {filename}')
+
+        writer = csv.writer(csv_file, delimiter=";")
+        writer.writerow(["Word", "Documents"])
+
+        lines_written = 0        
+        for key, value in sorted(gli_dict.items()):
+            writer.writerow([key, value])
+            lines_written += 1
+
+            if lines_written % 100 == 0:
+                logging.info(f'{lines_written} linhas escritas em {filename}')
+        
+        logging.info(f'{lines_written} linhas escritas em {filename}')
+
+def main():
+    filename, gli_dict = read()
+    write(filename, gli_dict)
+
+if __name__ == "__main__":
+    main()

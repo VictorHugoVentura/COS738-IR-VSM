@@ -45,60 +45,78 @@ import csv
 import logging
 import xml.etree.ElementTree as ET
 
-
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-conf_file = "pc.cfg"
-logging.basicConfig(filename="processador.log", level=logging.INFO, format=FORMAT)
+logging.basicConfig(filename="logs/processador.log", level=logging.INFO, format=FORMAT)
 
-logging.info(f'Executando {__file__}')
+def processador():
+    logging.info(f'Executando {__file__}')
+    conf_file = "pc.cfg"
 
-with open(f"config/{conf_file}") as config_file:
-    logging.info(f'Abrindo {conf_file}')
+    with open(f"config/{conf_file}") as config_file:
+        logging.info(f'Abrindo {conf_file}')
 
-    for i, line in enumerate(config_file):
-        if i == 0:
-            leia = line.split('=')[1].rstrip()
-        elif i == 1:
-            consultas = line.split('=')[1].rstrip()
-        elif i == 2:
-            esperados = line.split('=')[1].rstrip()
-        else:
-            logging.error(f'Erro ao ler {conf_file}')
-    logging.info(f'Fechando {conf_file}')
-    
-with open(leia) as xml_file, \
-    open(consultas, "w", newline='') as consulta_f, \
-    open(esperados, "w", newline='') as esperado_f:
-    logging.info(f"Abrindo {leia}")
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
-
-    consulta_w = csv.writer(consulta_f, delimiter=";")
-    consulta_w.writerow(["QueryNumber", "QueryText"])
-    
-    esperado_w = csv.writer(esperado_f, delimiter=";")
-    esperado_w.writerow(["QueryNumber", "DocNumber", "DocVotes"])
-    
-    i = 0
-    for query in root:
-        i += 1
-        if i % 10 == 0:
-            logging.info(f"{i} consultas processadas")
+        for i, line in enumerate(config_file):
+            if i == 0:
+                leia = line.split('=')[1].rstrip()
+            elif i == 1:
+                consultas = line.split('=')[1].rstrip()
+            elif i == 2:
+                esperados = line.split('=')[1].rstrip()
+            else:
+                logging.error(f'Erro ao ler {conf_file}')
         
-        number = query.find("QueryNumber")
-        text = query.find("QueryText")
-        processed_text = re.sub('[^A-Z]', ' ', text.text.upper())
-        consulta_w.writerow([number.text, processed_text])
+    with open(leia) as xml_file, \
+        open(consultas, "w", newline='') as consulta_f, \
+        open(esperados, "w", newline='') as esperado_f:
+        logging.info(f"Abrindo {leia}")
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+
+        consulta_w = csv.writer(consulta_f, delimiter=";")
+        consulta_w.writerow(["QueryNumber", "QueryText"])
         
-        records = query.find("Records")
-        for item in records:
-            score = item.attrib['score']
+        esperado_w = csv.writer(esperado_f, delimiter=";")
+        esperado_w.writerow(["QueryNumber", "DocNumber", "DocVotes"])
+        
+        lines_read = 0
+        lines_written_consulta = 0
+        lines_written_esperado = 0
+
+        for query in root:
+            lines_read += 1
+            lines_written_consulta += 1
+            if lines_read % 10 == 0:
+                logging.info(f"{lines_read} consultas processadas de {leia}")
+                logging.info(f"{lines_written_consulta} linhas escritas em {consultas}")
             
-            s = 0
-            for x in score:
-                if x != "0":
-                    s += 1
+            number = query.find("QueryNumber")
+            text = query.find("QueryText")
+            processed_text = re.sub('[^A-Z]', ' ', text.text.upper())
+
+            consulta_w.writerow([number.text, processed_text])
             
-            esperado_w.writerow([number.text, item.text, s])
-    logging.info(f"{i} consultas processadas")
-    logging.info(f"Fechando {leia}")
+            records = query.find("Records")
+            for item in records:
+                lines_written_esperado += 1
+                score = item.attrib['score']
+                
+                s = 0
+                for x in score:
+                    if x != "0":
+                        s += 1
+                
+                esperado_w.writerow([number.text, item.text, s])
+
+                if lines_written_esperado % 100 == 0:
+                    logging.info(f"{lines_written_esperado} linhas escritas em {esperados}")
+
+        logging.info(f"{lines_read} consultas processadas de {leia}")
+        logging.info(f"{lines_written_consulta} consultas processadas de {consultas}")
+        logging.info(f"{lines_written_esperado} consultas processadas de {esperados}")
+        logging.info(f"Fechando {leia}")
+
+def main():
+    processador()
+
+if __name__ == "__main__":
+    main()
