@@ -20,71 +20,111 @@ escrevendo outro arquivo com a resposta encontrada para cada consulta.
             3. O terceiro elemento é a distância do elemento para a consulta
 '''
 
+
+import os
 import csv
+import logging
 from collections import Counter
 
-min_length = 2
-user_input = int(input("Press 1 for dot product similarity,\nPress 2 for cosine similarity (significantly slower)\n"))
 
-with open("config/busca.cfg") as config_file:
-    for i, line in enumerate(config_file):
-        if i == 0:
-            modelo = line.split('=')[1].rstrip()
-        elif i == 1:
-            consultas = line.split('=')[1].rstrip()
-        elif i == 2:
-            resultados = line.split('=')[1].rstrip()
+FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+os.makedirs('logs', exist_ok=True)
+logging.basicConfig(filename="logs/buscador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
 
-matrix_dict = {}
+def buscador():
+    logging.info('Executando {__file__}')
+    min_length = 2
+    conf_file = 'busca.cfg'
+    user_input = int(input("Press 1 for dot product similarity,\nPress 2 for cosine similarity (significantly slower)\n"))
 
-with open(modelo) as model_file:
-    model_reader = csv.reader(model_file, delimiter=";")
-    next(model_reader)
-    
-    for line in model_reader:
-        if line[0] not in matrix_dict.keys():
-            matrix_dict[line[0]] = {int(line[1]): float(line[2])}
-        else:
-            matrix_dict[line[0]][int(line[1])] = float(line[2])
+    if user_input == 1:
+        logging.info(f'Utilizando similaridade por produto interno')
+    elif user_input == 2:
+        logging.info(f'Utilizando similaridade por cosseno')
+    else:
+        logging.error(f'Entrada inválida: {user_input}')
 
+    with open(f"config/{conf_file}") as config_file:
+        logging.info(f'Abrindo {conf_file}')
+        for i, line in enumerate(config_file):
+            if i == 0:
+                modelo = line.split('=')[1].rstrip()
+            elif i == 1:
+                consultas = line.split('=')[1].rstrip()
+            elif i == 2:
+                resultados = line.split('=')[1].rstrip()
 
-with open(resultados, "w", newline='') as result_file:
-    writer = csv.writer(result_file, delimiter=";")
-    writer.writerow(["QueryNumber", "[DocRanking, DocNumber, Similarity]"])
+    matrix_dict = {}
 
-with open(consultas) as query_file:
-    query_reader = csv.reader(query_file, delimiter=";")
-    next(query_reader)
-    
-    for query in query_reader:
-        query_dict = {}
+    with open(modelo) as model_file:
+        model_reader = csv.reader(model_file, delimiter=";")
+        next(model_reader)
         
-        words = query[1].split()
-        words = [word for word in words if len(word) >= min_length]
-        query_vec = Counter(words)
+        for line in model_reader:
+            if line[0] not in matrix_dict.keys():
+                matrix_dict[line[0]] = {int(line[1]): float(line[2])}
+            else:
+                matrix_dict[line[0]][int(line[1])] = float(line[2])
+
+
+    with open(resultados, "w", newline='') as result_file:
+        writer = csv.writer(result_file, delimiter=";")
+        writer.writerow(["QueryNumber", "[DocRanking, DocNumber, Similarity]"])
+
+    with open(consultas) as query_file:
+        logging.info(f'Abrindo {consultas}')
+        query_reader = csv.reader(query_file, delimiter=";")
+        next(query_reader)
         
-        for word in query_vec:
-            if word in matrix_dict.keys():
-                current_dict = matrix_dict[word]
-                weight_list = []
-                for key in current_dict:
-                    weight_list.append(current_dict[key])
-                    if key not in query_dict:
-                        query_dict[key] = current_dict[key] * query_vec[word]
-                    else:
-                        query_dict[key] += current_dict[key] * query_vec[word]
-                
-                # similaridade por cosseno
-                if user_input == 2:
-                    import numpy as np
+        query_num = 0
+        result_lines = 0
+        for query in query_reader:
+            query_dict = {}
+            
+            words = query[1].split()
+            words = [word for word in words if len(word) >= min_length]
+            query_vec = Counter(words)
+            
+            for word in query_vec:
+                if word in matrix_dict.keys():
+                    current_dict = matrix_dict[word]
+                    weight_list = []
                     for key in current_dict:
-                        query_dict[key] /= np.linalg.norm(list(query_vec.values())) * np.linalg.norm(weight_list)
-        
-        
-        sorted_values = sorted(query_dict.items(), key=lambda item: item[1], reverse=True)[:5]
-        
-        with open(resultados, "a", newline='') as result_file:
-            result_writer = csv.writer(result_file, delimiter=";")
-            for i, elem in enumerate(sorted_values):
-                li = [i + 1, sorted_values[i][0], sorted_values[i][1]]
-                result_writer.writerow([query[0], li])
+                        weight_list.append(current_dict[key])
+                        if key not in query_dict:
+                            query_dict[key] = current_dict[key] * query_vec[word]
+                        else:
+                            query_dict[key] += current_dict[key] * query_vec[word]
+                    
+                    # similaridade por cosseno
+                    if user_input == 2:
+                        import numpy as np
+                        for key in current_dict:
+                            query_dict[key] /= np.linalg.norm(list(query_vec.values())) * np.linalg.norm(weight_list)
+            
+            query_num += 1
+            if query_num % 10 == 0:
+                logging.info(f'{query_num} consultas processadas de {consultas}')
+            
+            sorted_values = sorted(query_dict.items(), key=lambda item: item[1], reverse=True)[:5]
+            
+            with open(resultados, "a", newline='') as result_file:
+                result_writer = csv.writer(result_file, delimiter=";")
+
+                for i, elem in enumerate(sorted_values):
+                    li = [i + 1, sorted_values[i][0], sorted_values[i][1]]
+                    result_writer.writerow([query[0], li])
+                    result_lines += 1
+
+                    if result_lines % 10 == 0:
+                        logging.info(f'{result_lines} linhas escritas em {resultados}')
+
+        logging.info(f'{query_num} consultas processadas de {consultas}')
+        logging.info(f'{result_lines} linhas escritas em {resultados}')
+        logging.info(f'Fechando {consultas}')
+
+def main():
+    buscador()
+
+if __name__ == '__main__':
+    main()

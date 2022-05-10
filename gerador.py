@@ -31,7 +31,7 @@ mesmo número de vezes na lista
         i. FIBROSIS ; [1,2,2,3,4,5,10,15,21,21,21]
 '''
 
-from fileinput import filename
+import os
 import re
 import csv
 import logging
@@ -41,14 +41,16 @@ from collections import defaultdict
 
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(filename="logs/gerador.log", level=logging.INFO, format=FORMAT)
+os.makedirs('logs', exist_ok=True)
+logging.basicConfig(filename="logs/gerador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
 
 def read():
+    logging.info(f'Executando {__file__}')
     min_length = 2
     conf_file = 'gli.cfg'
 
     with open(f"config/{conf_file}") as config_file:
-        logging.info(f'Executando {__file__}')
+        logging.info(f'Abrindo {conf_file}')
         gli_dict = defaultdict(list)
         
         for line in config_file:
@@ -76,7 +78,7 @@ def read():
                             for word in words:
                                 gli_dict[word].append(record_num)
             elif inst[0] == "ESCREVA":
-                return inst[1], gli_dict
+                return inst[1].rstrip(), gli_dict
             else:
                 logging.error("Erro ao ler {conf_file}")
 
@@ -96,6 +98,7 @@ def write(filename, gli_dict):
                 logging.info(f'{lines_written} linhas escritas em {filename}')
         
         logging.info(f'{lines_written} linhas escritas em {filename}')
+        logging.info(f'Fechando {filename}')
 
 def main():
     filename, gli_dict = read()

@@ -20,6 +20,7 @@ A função desse módulo é criar o modelo vetorial, dadas as listas invertidas 
 '''
 
 
+import os
 import csv
 import ast
 import math
@@ -28,13 +29,21 @@ import logging
 from collections import Counter
 
 
+FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+os.makedirs('logs', exist_ok=True)
+logging.basicConfig(filename="logs/indexador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
+
 def indexador():
     logging.info(f"Executando {__file__}")
-    FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
     conf_file = "index.cfg"
-    logging.basicConfig(filename="logs/indexador.log", level=logging.INFO, format=FORMAT)
+    freq_input = int(input("Press 1 for raw frequency,\nPress 2 for relative frequency\n"))
 
-    freq_input = int(input("Press 1 for raw frequency,\nPress 2 for relative frequency,\n"))
+    if freq_input == 1:
+        logging.info('Utilizando frequência absoluta para calcular tf')
+    elif freq_input == 2:
+        logging.info('Utilizando frequência relativa para calcular tf')
+    else:
+        logging.error(f'Entrada inválida: {freq_input}')
 
     with open(f"config/{conf_file}") as config_file:
         logging.info(f'Abrindo {conf_file}')
@@ -44,8 +53,6 @@ def indexador():
                 leia = line.split('=')[1].rstrip()
             elif i == 1:
                 escreva = line.split('=')[1].rstrip()
-            else:
-                logging.error(f"Erro ao ler {conf_file}")
 
     num_words_list = []
     vocab = 0
@@ -62,12 +69,13 @@ def indexador():
                 while elem > len(num_words_list):
                     num_words_list.append(0)
                 num_words_list[elem - 1] += 1
-            
+
 
     num_docs = len(num_words_list)
 
     with open(leia, newline='\n') as read_file, \
         open(escreva, "w", newline='') as write_file:
+        logging.info(f'Abrindo {leia} e {escreva}')
         reader = csv.reader(read_file, delimiter=";")
         next(reader)
         
@@ -78,8 +86,8 @@ def indexador():
         lines_written = 0
         for line in reader:
             lines_read += 1
-            if lines_read % 10 == 0:
-                logging.info(f"{lines_read} linhas lidas")
+            if lines_read % 100 == 0:
+                logging.info(f"{lines_read} linhas lidas em {leia}")
 
             li = ast.literal_eval(line[1])
             c = Counter(li)
@@ -92,12 +100,12 @@ def indexador():
                 
                 lines_written += 1
                 writer.writerow([line[0], doc, weight])
-                if lines_written % 10 == 0:
-                    logging.info(f"{lines_written} linhas escritas em {write_file}")
+                if lines_written % 1000 == 0:
+                    logging.info(f"{lines_written} linhas escritas em {escreva}")
         
-        logging.info(f"{lines_read} linhas lidas de {read_file}")
-        logging.info(f"{lines_written} linhas escritas em {write_file}")
-        logging.info(f"Fechando {leia}")
+        logging.info(f"{lines_read} linhas lidas de {leia}")
+        logging.info(f"{lines_written} linhas escritas em {escreva}")
+        logging.info(f"Fechando {leia} e {escreva}")
 
 def main():
     indexador()

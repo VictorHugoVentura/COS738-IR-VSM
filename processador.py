@@ -47,7 +47,7 @@ import xml.etree.ElementTree as ET
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 os.makedirs('logs', exist_ok=True)
-logging.basicConfig(filename="logs/processador.log", level=logging.INFO, format=FORMAT)
+logging.basicConfig(filename="logs/processador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
 
 def processador():
     logging.info(f'Executando {__file__}')
@@ -63,8 +63,6 @@ def processador():
                 consultas = line.split('=')[1].rstrip()
             elif i == 2:
                 esperados = line.split('=')[1].rstrip()
-            else:
-                logging.error(f'Erro ao ler {conf_file}')
         
     with open(leia) as xml_file, \
         open(consultas, "w", newline='') as consulta_f, \
