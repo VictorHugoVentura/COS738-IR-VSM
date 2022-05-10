@@ -1,0 +1,5 @@
+O arquivo "modelo.csv" representa uma matriz termo documento
+
+Formato do modelo: Palavra, número do documento, peso
+
+Todos os pares (Word, DocNumber) não mencionados em "modelo.csv" tem peso zero
