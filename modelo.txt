@@ -1,5 +1,5 @@
-O arquivo "modelo.csv" representa uma matriz termo documento
-
-Formato do modelo: Palavra, número do documento, peso
-
-Todos os pares (Word, DocNumber) não mencionados em "modelo.csv" tem peso zero
+O arquivo "modelo.csv" representa uma matriz termo documento em
+que cada entrada é a estatística tf-idf associada ao par (Word, DocNumber).
+O formato da representação é "palavra; número do documento; peso".
+Todos os pares (Word, DocNumber) que não estão no arquivo "modelo.csv"
+tem peso tf-idf igual a zero.
