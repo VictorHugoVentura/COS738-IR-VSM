@@ -39,13 +39,14 @@ O objetivo desse módulo é transformar o arquivo de consultas fornecido ao padr
                 a. Considerar qualquer coisa diferente de zero como um voto
 '''
 
-
+import os
 import re
 import csv
 import logging
 import xml.etree.ElementTree as ET
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+os.makedirs('logs', exist_ok=True)
 logging.basicConfig(filename="logs/processador.log", level=logging.INFO, format=FORMAT)
 
 def processador():
@@ -68,7 +69,7 @@ def processador():
     with open(leia) as xml_file, \
         open(consultas, "w", newline='') as consulta_f, \
         open(esperados, "w", newline='') as esperado_f:
-        logging.info(f"Abrindo {leia}")
+        logging.info(f"Abrindo {leia}, {consultas} e {esperados}")
         tree = ET.parse(xml_file)
         root = tree.getroot()
 
@@ -111,9 +112,9 @@ def processador():
                     logging.info(f"{lines_written_esperado} linhas escritas em {esperados}")
 
         logging.info(f"{lines_read} consultas processadas de {leia}")
-        logging.info(f"{lines_written_consulta} consultas processadas de {consultas}")
-        logging.info(f"{lines_written_esperado} consultas processadas de {esperados}")
-        logging.info(f"Fechando {leia}")
+        logging.info(f"{lines_written_consulta} linhas escritas em {consultas}")
+        logging.info(f"{lines_written_esperado} linhas escritas em {esperados}")
+        logging.info(f"Fechando {leia}, {consultas} e {esperados}")
 
 def main():
     processador()
