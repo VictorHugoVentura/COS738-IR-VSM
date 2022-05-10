@@ -12,7 +12,7 @@ Arquivos gerados pelo sistema
 --
 1. consultas.csv - Criado pelo processador, lista todas as consultas processadas.
 2. esperados.csv - Criado pelo processador, lista número do documento e seu número de votos.
-3. gli.csv - Criado pelo gerador, cada linha correponde a uma plavra e à lista de documentos que a palavra aparece.
+3. gli.csv - Criado pelo gerador, cada linha correponde a uma palavra e à lista dos índices dos documentos em que a palavra aparece. O índice do documento aparece na lista o mesmo número de vezes que a palavra aparece no documento.
 4. modelo.csv - Criado pelo indexador, especificado no arquivo modelo.txt.
 5. resultados.csv - Criado pelo buscador, para cada consulta listamos o rank e o índice dos seus 5 documentos mais similares e o grau de similaridade para cada documento.
 
