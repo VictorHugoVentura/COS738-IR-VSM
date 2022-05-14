@@ -57,6 +57,7 @@ def read():
             line = line.rstrip()
 
             if line == "STEMMER":
+                logging.info("Escolhida a opção de fazer stemming das palavras")
                 from nltk.stem import PorterStemmer
                 ps = PorterStemmer()
                 stem = True

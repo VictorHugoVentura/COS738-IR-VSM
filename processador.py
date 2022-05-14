@@ -47,6 +47,8 @@ import xml.etree.ElementTree as ET
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 os.makedirs('logs', exist_ok=True)
+
+logger = logging.getLogger(__name__)
 logging.basicConfig(filename="logs/processador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
 
 def processador():
@@ -57,12 +59,28 @@ def processador():
         logging.info(f'Abrindo {conf_file}')
 
         for i, line in enumerate(config_file):
-            if i == 0:
-                leia = line.split('=')[1].rstrip()
-            elif i == 1:
-                consultas = line.split('=')[1].rstrip()
-            elif i == 2:
-                esperados = line.split('=')[1].rstrip()
+            line = line.rstrip()
+
+            if line == "STEMMER":
+                logging.info("Escolhida a opção de fazer stemming das consultas")
+                from nltk.stem import PorterStemmer
+                ps = PorterStemmer()
+                stem = True
+                continue
+            elif line == "NOSTEMMER":
+                stem = False
+                continue
+
+            instruct, filename = line.split('=')
+
+            if instruct == "LEIA":
+                leia = filename
+            elif instruct == "CONSULTAS":
+                consultas = filename
+            elif instruct == "ESPERADOS":
+                esperados = filename
+            else:
+                logging.error(f'Erro ao ler {conf_file}')
         
     with open(leia) as xml_file, \
         open(consultas, "w", newline='') as consulta_f, \
@@ -88,11 +106,14 @@ def processador():
                 logging.info(f"{lines_read} consultas processadas de {leia}")
                 logging.info(f"{lines_written_consulta} linhas escritas em {consultas}")
             
-            number = query.find("QueryNumber")
-            text = query.find("QueryText")
-            processed_text = re.sub('[^A-Z]', ' ', text.text.upper())
+            query_number = query.find("QueryNumber")
+            query_text = query.find("QueryText")
+            processed_text = re.sub('[^a-zA-Z]', ' ', query_text.text)
 
-            consulta_w.writerow([number.text, processed_text])
+            if stem:
+                processed_text = ' '.join(ps.stem(word) for word in processed_text.split())
+
+            consulta_w.writerow([query_number.text, processed_text.upper()])
             
             records = query.find("Records")
             for item in records:
@@ -104,7 +125,7 @@ def processador():
                     if x != "0":
                         s += 1
                 
-                esperado_w.writerow([number.text, item.text, s])
+                esperado_w.writerow([query_number.text, item.text, s])
 
                 if lines_written_esperado % 100 == 0:
                     logging.info(f"{lines_written_esperado} linhas escritas em {esperados}")
