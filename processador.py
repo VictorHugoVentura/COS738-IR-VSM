@@ -45,24 +45,30 @@ import csv
 import logging
 import xml.etree.ElementTree as ET
 
-FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+
 os.makedirs('logs', exist_ok=True)
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename="logs/processador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('logs/processador.log', encoding='utf-8')
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 
 def processador():
-    logging.info(f'Executando {__file__}')
+    logger.info(f'Executando {__file__}')
     conf_file = "pc.cfg"
 
     with open(f"config/{conf_file}") as config_file:
-        logging.info(f'Abrindo {conf_file}')
+        logger.info(f'Abrindo {conf_file}')
 
         for i, line in enumerate(config_file):
             line = line.rstrip()
 
             if line == "STEMMER":
-                logging.info("Escolhida a opção de fazer stemming das consultas")
+                logger.info("Escolhida a opção de fazer stemming das consultas")
                 from nltk.stem import PorterStemmer
                 ps = PorterStemmer()
                 stem = True
@@ -85,7 +91,7 @@ def processador():
     with open(leia) as xml_file, \
         open(consultas, "w", newline='') as consulta_f, \
         open(esperados, "w", newline='') as esperado_f:
-        logging.info(f"Abrindo {leia}, {consultas} e {esperados}")
+        logger.info(f"Abrindo {leia}, {consultas} e {esperados}")
         tree = ET.parse(xml_file)
         root = tree.getroot()
 
@@ -103,8 +109,8 @@ def processador():
             lines_read += 1
             lines_written_consulta += 1
             if lines_read % 10 == 0:
-                logging.info(f"{lines_read} consultas processadas de {leia}")
-                logging.info(f"{lines_written_consulta} linhas escritas em {consultas}")
+                logger.info(f"{lines_read} consultas processadas de {leia}")
+                logger.info(f"{lines_written_consulta} linhas escritas em {consultas}")
             
             query_number = query.find("QueryNumber")
             query_text = query.find("QueryText")
@@ -128,12 +134,12 @@ def processador():
                 esperado_w.writerow([query_number.text, item.text, s])
 
                 if lines_written_esperado % 100 == 0:
-                    logging.info(f"{lines_written_esperado} linhas escritas em {esperados}")
+                    logger.info(f"{lines_written_esperado} linhas escritas em {esperados}")
 
-        logging.info(f"{lines_read} consultas processadas de {leia}")
-        logging.info(f"{lines_written_consulta} linhas escritas em {consultas}")
-        logging.info(f"{lines_written_esperado} linhas escritas em {esperados}")
-        logging.info(f"Fechando {leia}, {consultas} e {esperados}")
+        logger.info(f"{lines_read} consultas processadas de {leia}")
+        logger.info(f"{lines_written_consulta} linhas escritas em {consultas}")
+        logger.info(f"{lines_written_esperado} linhas escritas em {esperados}")
+        logger.info(f"Fechando {leia}, {consultas} e {esperados}")
 
 def main():
     processador()
