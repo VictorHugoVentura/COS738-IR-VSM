@@ -54,10 +54,20 @@ def read():
         gli_dict = defaultdict(list)
         
         for line in config_file:
-            inst = line.split('=')
-            if inst[0] == "LEIA":
-                filename = inst[1].rstrip()
+            line = line.rstrip()
 
+            if line == "STEMMER":
+                from nltk.stem import PorterStemmer
+                ps = PorterStemmer()
+                stem = True
+                continue
+            elif line == "NOSTEMMER":
+                stem = False
+                continue
+
+            instruct, filename = line.split('=')
+
+            if instruct == "LEIA":
                 with open(filename) as xml_file:
                     logging.info(f'Processando {filename}')
                     tree = ET.parse(xml_file)
@@ -71,16 +81,19 @@ def read():
                             text_elem = record.find("EXTRACT")
                             
                         if text_elem is not None:
-                            words = text_elem.text.upper()
-                            words = re.sub('[^A-Z]', ' ', words)
+                            words = text_elem.text
+                            words = re.sub('[^a-zA-Z]', ' ', words)
                             words = words.split()
-                            words = [word for word in words if len(word) >= min_length]
+                            if stem:
+                                words = [ps.stem(word).upper() for word in words if len(word) >= min_length]
+                            else:
+                                words = [word.upper() for word in words if len(word) >= min_length]
                             for word in words:
                                 gli_dict[word].append(record_num)
-            elif inst[0] == "ESCREVA":
-                return inst[1].rstrip(), gli_dict
+            elif instruct == "ESCREVA":
+                return filename, gli_dict
             else:
-                logging.error("Erro ao ler {conf_file}")
+                logging.error(f"Erro ao ler {conf_file}")
 
 def write(filename, gli_dict):
     with open(filename, 'w', newline='') as csv_file:
