@@ -86,7 +86,7 @@ def processador():
             elif instruct == "ESPERADOS":
                 esperados = filename
             else:
-                logging.error(f'Erro ao ler {conf_file}')
+                logger.error(f'Erro ao ler {conf_file}')
         
     with open(leia) as xml_file, \
         open(consultas, "w", newline='') as consulta_f, \

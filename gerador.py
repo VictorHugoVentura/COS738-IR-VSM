@@ -40,24 +40,31 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 
-FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 os.makedirs('logs', exist_ok=True)
-logging.basicConfig(filename="logs/gerador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('logs/gerador.log', encoding='utf-8')
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 
 def read():
-    logging.info(f'Executando {__file__}')
+    logger.info(f'Executando {__file__}')
     min_length = 2
     conf_file = 'gli.cfg'
 
     with open(f"config/{conf_file}") as config_file:
-        logging.info(f'Abrindo {conf_file}')
+        logger.info(f'Abrindo {conf_file}')
         gli_dict = defaultdict(list)
         
         for line in config_file:
             line = line.rstrip()
 
             if line == "STEMMER":
-                logging.info("Escolhida a opção de fazer stemming das palavras")
+                logger.info("Escolhida a opção de fazer stemming das palavras")
                 from nltk.stem import PorterStemmer
                 ps = PorterStemmer()
                 stem = True
@@ -70,7 +77,7 @@ def read():
 
             if instruct == "LEIA":
                 with open(filename) as xml_file:
-                    logging.info(f'Processando {filename}')
+                    logger.info(f'Processando {filename}')
                     tree = ET.parse(xml_file)
                     root = tree.getroot()
                     
@@ -94,11 +101,11 @@ def read():
             elif instruct == "ESCREVA":
                 return filename, gli_dict
             else:
-                logging.error(f"Erro ao ler {conf_file}")
+                logger.error(f"Erro ao ler {conf_file}")
 
 def write(filename, gli_dict):
     with open(filename, 'w', newline='') as csv_file:
-        logging.info(f'Abrindo {filename}')
+        logger.info(f'Abrindo {filename}')
 
         writer = csv.writer(csv_file, delimiter=";")
         writer.writerow(["Word", "Documents"])
@@ -109,10 +116,10 @@ def write(filename, gli_dict):
             lines_written += 1
 
             if lines_written % 100 == 0:
-                logging.info(f'{lines_written} linhas escritas em {filename}')
+                logger.info(f'{lines_written} linhas escritas em {filename}')
         
-        logging.info(f'{lines_written} linhas escritas em {filename}')
-        logging.info(f'Fechando {filename}')
+        logger.info(f'{lines_written} linhas escritas em {filename}')
+        logger.info(f'Fechando {filename}')
 
 def main():
     filename, gli_dict = read()

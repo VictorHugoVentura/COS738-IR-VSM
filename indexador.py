@@ -29,24 +29,31 @@ import logging
 from collections import Counter
 
 
-FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 os.makedirs('logs', exist_ok=True)
-logging.basicConfig(filename="logs/indexador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('logs/indexador.log', encoding='utf-8')
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 
 def indexador():
-    logging.info(f"Executando {__file__}")
+    logger.info(f"Executando {__file__}")
     conf_file = "index.cfg"
     freq_input = int(input("Press 1 for raw frequency,\nPress 2 for relative frequency\n"))
 
     if freq_input == 1:
-        logging.info('Utilizando frequência absoluta para calcular tf')
+        logger.info('Utilizando frequência absoluta para calcular tf')
     elif freq_input == 2:
-        logging.info('Utilizando frequência relativa para calcular tf')
+        logger.info('Utilizando frequência relativa para calcular tf')
     else:
-        logging.error(f'Entrada inválida: {freq_input}')
+        logger.error(f'Entrada inválida: {freq_input}')
 
     with open(f"config/{conf_file}") as config_file:
-        logging.info(f'Abrindo {conf_file}')
+        logger.info(f'Abrindo {conf_file}')
 
         for i, line in enumerate(config_file):
             if i == 0:
@@ -75,7 +82,7 @@ def indexador():
 
     with open(leia, newline='\n') as read_file, \
         open(escreva, "w", newline='') as write_file:
-        logging.info(f'Abrindo {leia} e {escreva}')
+        logger.info(f'Abrindo {leia} e {escreva}')
         reader = csv.reader(read_file, delimiter=";")
         next(reader)
         
@@ -87,7 +94,7 @@ def indexador():
         for line in reader:
             lines_read += 1
             if lines_read % 100 == 0:
-                logging.info(f"{lines_read} linhas lidas em {leia}")
+                logger.info(f"{lines_read} linhas lidas em {leia}")
 
             li = ast.literal_eval(line[1])
             c = Counter(li)
@@ -101,11 +108,11 @@ def indexador():
                 lines_written += 1
                 writer.writerow([line[0], doc, weight])
                 if lines_written % 1000 == 0:
-                    logging.info(f"{lines_written} linhas escritas em {escreva}")
+                    logger.info(f"{lines_written} linhas escritas em {escreva}")
         
-        logging.info(f"{lines_read} linhas lidas de {leia}")
-        logging.info(f"{lines_written} linhas escritas em {escreva}")
-        logging.info(f"Fechando {leia} e {escreva}")
+        logger.info(f"{lines_read} linhas lidas de {leia}")
+        logger.info(f"{lines_written} linhas escritas em {escreva}")
+        logger.info(f"Fechando {leia} e {escreva}")
 
 def main():
     indexador()

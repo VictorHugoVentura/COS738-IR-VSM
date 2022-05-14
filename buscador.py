@@ -27,25 +27,32 @@ import logging
 from collections import Counter
 
 
-FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 os.makedirs('logs', exist_ok=True)
-logging.basicConfig(filename="logs/buscador.log", level=logging.INFO, format=FORMAT, encoding='utf-8')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('logs/buscador.log', encoding='utf-8')
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
 
 def buscador():
-    logging.info('Executando {__file__}')
+    logger.info('Executando {__file__}')
     min_length = 2
     conf_file = 'busca.cfg'
     user_input = int(input("Press 1 for dot product similarity,\nPress 2 for cosine similarity (significantly slower)\n"))
 
     if user_input == 1:
-        logging.info(f'Utilizando similaridade por produto interno')
+        logger.info(f'Utilizando similaridade por produto interno')
     elif user_input == 2:
-        logging.info(f'Utilizando similaridade por cosseno')
+        logger.info(f'Utilizando similaridade por cosseno')
     else:
-        logging.error(f'Entrada inválida: {user_input}')
+        logger.error(f'Entrada inválida: {user_input}')
 
     with open(f"config/{conf_file}") as config_file:
-        logging.info(f'Abrindo {conf_file}')
+        logger.info(f'Abrindo {conf_file}')
         for i, line in enumerate(config_file):
             if i == 0:
                 modelo = line.split('=')[1].rstrip()
@@ -72,7 +79,7 @@ def buscador():
         writer.writerow(["QueryNumber", "[DocRanking, DocNumber, Similarity]"])
 
     with open(consultas) as query_file:
-        logging.info(f'Abrindo {consultas}')
+        logger.info(f'Abrindo {consultas}')
         query_reader = csv.reader(query_file, delimiter=";")
         next(query_reader)
         
@@ -104,7 +111,7 @@ def buscador():
             
             query_num += 1
             if query_num % 10 == 0:
-                logging.info(f'{query_num} consultas processadas de {consultas}')
+                logger.info(f'{query_num} consultas processadas de {consultas}')
             
             sorted_values = sorted(query_dict.items(), key=lambda item: item[1], reverse=True)[:5]
             
@@ -117,11 +124,11 @@ def buscador():
                     result_lines += 1
 
                     if result_lines % 10 == 0:
-                        logging.info(f'{result_lines} linhas escritas em {resultados}')
+                        logger.info(f'{result_lines} linhas escritas em {resultados}')
 
-        logging.info(f'{query_num} consultas processadas de {consultas}')
-        logging.info(f'{result_lines} linhas escritas em {resultados}')
-        logging.info(f'Fechando {consultas}')
+        logger.info(f'{query_num} consultas processadas de {consultas}')
+        logger.info(f'{result_lines} linhas escritas em {resultados}')
+        logger.info(f'Fechando {consultas}')
 
 def main():
     buscador()
