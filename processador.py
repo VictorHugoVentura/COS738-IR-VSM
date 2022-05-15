@@ -68,12 +68,13 @@ def processador():
             line = line.rstrip()
 
             if line == "STEMMER":
-                logger.info("Escolhida a opção de fazer stemming das consultas")
+                logger.info("Escolhida a configuração de fazer stemming das consultas")
                 from nltk.stem import PorterStemmer
                 ps = PorterStemmer()
                 stem = True
                 continue
             elif line == "NOSTEMMER":
+                logger.info("Escolhida a configuração de não fazer stemming das consultas")
                 stem = False
                 continue
 
@@ -108,9 +109,6 @@ def processador():
         for query in root:
             lines_read += 1
             lines_written_consulta += 1
-            if lines_read % 10 == 0:
-                logger.info(f"{lines_read} consultas processadas de {leia}")
-                logger.info(f"{lines_written_consulta} linhas escritas em {consultas}")
             
             query_number = query.find("QueryNumber")
             query_text = query.find("QueryText")
@@ -132,9 +130,6 @@ def processador():
                         s += 1
                 
                 esperado_w.writerow([query_number.text, item.text, s])
-
-                if lines_written_esperado % 100 == 0:
-                    logger.info(f"{lines_written_esperado} linhas escritas em {esperados}")
 
         logger.info(f"{lines_read} consultas processadas de {leia}")
         logger.info(f"{lines_written_consulta} linhas escritas em {consultas}")

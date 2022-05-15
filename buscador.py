@@ -39,17 +39,9 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 def buscador():
-    logger.info('Executando {__file__}')
+    logger.info(f'Executando {__file__}')
     min_length = 2
     conf_file = 'busca.cfg'
-    user_input = int(input("Press 1 for dot product similarity,\nPress 2 for cosine similarity (significantly slower)\n"))
-
-    if user_input == 1:
-        logger.info(f'Utilizando similaridade por produto interno')
-    elif user_input == 2:
-        logger.info(f'Utilizando similaridade por cosseno')
-    else:
-        logger.error(f'Entrada inválida: {user_input}')
 
     with open(f"config/{conf_file}") as config_file:
         logger.info(f'Abrindo {conf_file}')
@@ -76,6 +68,9 @@ def buscador():
                     resultados = oldname + "-stemmer." + extension
                 else:
                     resultados = oldname + "-nostemmer." + extension
+            elif instruct == "SIMILARIDADE":
+                logger.info(f"Utilizando similaridade por {filename}")
+                sim = filename
 
     matrix_dict = {}
 
@@ -120,15 +115,12 @@ def buscador():
                             query_dict[key] += current_dict[key] * query_vec[word]
                     
                     # similaridade por cosseno
-                    if user_input == 2:
+                    if sim == "cosseno":
                         import numpy as np
                         for key in current_dict:
                             query_dict[key] /= np.linalg.norm(list(query_vec.values())) * np.linalg.norm(weight_list)
             
             query_num += 1
-            if query_num % 10 == 0:
-                logger.info(f'{query_num} consultas processadas de {consultas}')
-            
             sorted_values = sorted(query_dict.items(), key=lambda item: item[1], reverse=True)[:5]
             
             with open(resultados, "a", newline='') as result_file:
@@ -138,9 +130,6 @@ def buscador():
                     li = [i + 1, sorted_values[i][0], sorted_values[i][1]]
                     result_writer.writerow([query[0], li])
                     result_lines += 1
-
-                    if result_lines % 10 == 0:
-                        logger.info(f'{result_lines} linhas escritas em {resultados}')
 
         logger.info(f'{query_num} consultas processadas de {consultas}')
         logger.info(f'{result_lines} linhas escritas em {resultados}')

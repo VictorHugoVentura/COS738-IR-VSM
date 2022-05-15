@@ -3,3 +3,13 @@ que cada entrada é a estatística tf-idf associada ao par (Word, DocNumber).
 O formato da representação é "palavra; número do documento; peso".
 Todos os pares (Word, DocNumber) que não estão no arquivo "modelo.csv"
 tem peso tf-idf igual a zero.
+
+A configuração FREQUÊNCIA no arquivo index.cfg pode ser escolhida como 
+"absoluta" ou "relativa", "absoluta" significa que simplesmente contamos
+o número de vezes que o termo aparece no documento; "relativa" significa
+que normalizamos o valor anterior pelo número de termos no documento.
+
+A configuração SIMILARIDADE no arquivo busca.cfg pode ser escolhida
+como "produto interno" ou "cosseno", "produto interno" toma o produto
+interno dos vetores que representam os documentos, enquanto "cosseno"
+normaliza este valor pelo produto das normas destes vetores.

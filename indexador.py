@@ -43,23 +43,21 @@ logger.addHandler(file_handler)
 def indexador():
     logger.info(f"Executando {__file__}")
     conf_file = "index.cfg"
-    freq_input = int(input("Press 1 for raw frequency,\nPress 2 for relative frequency\n"))
 
-    if freq_input == 1:
-        logger.info('Utilizando frequência absoluta para calcular tf')
-    elif freq_input == 2:
-        logger.info('Utilizando frequência relativa para calcular tf')
-    else:
-        logger.error(f'Entrada inválida: {freq_input}')
-
-    with open(f"config/{conf_file}") as config_file:
+    with open(f"config/{conf_file}", encoding='utf-8') as config_file:
         logger.info(f'Abrindo {conf_file}')
 
-        for i, line in enumerate(config_file):
-            if i == 0:
-                leia = line.split('=')[1].rstrip()
-            elif i == 1:
-                escreva = line.split('=')[1].rstrip()
+        for line in config_file:
+            line = line.rstrip()
+            instruct, filename = line.split('=')
+
+            if instruct == "LEIA":
+                leia = filename
+            elif instruct == "ESCREVA":
+                escreva = filename
+            elif instruct == "FREQUÊNCIA":
+                logger.info(f"Utilizando frequência {filename} para calcular tf")
+                freq = filename
 
     num_words_list = []
     vocab = 0
@@ -93,22 +91,18 @@ def indexador():
         lines_written = 0
         for line in reader:
             lines_read += 1
-            if lines_read % 100 == 0:
-                logger.info(f"{lines_read} linhas lidas em {leia}")
 
             li = ast.literal_eval(line[1])
             c = Counter(li)
             
             for doc in c:
-                if freq_input == 1:
+                if freq == "absoluta":
                     weight = c[doc] * math.log(num_docs/len(set(li)) + 1)
-                elif freq_input == 2:
+                elif freq == "relativa":
                     weight = (c[doc]/num_words_list[doc - 1]) * math.log(num_docs/len(set(li)) + 1)
                 
                 lines_written += 1
                 writer.writerow([line[0], doc, weight])
-                if lines_written % 1000 == 0:
-                    logger.info(f"{lines_written} linhas escritas em {escreva}")
         
         logger.info(f"{lines_read} linhas lidas de {leia}")
         logger.info(f"{lines_written} linhas escritas em {escreva}")
