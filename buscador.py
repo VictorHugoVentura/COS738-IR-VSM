@@ -53,13 +53,29 @@ def buscador():
 
     with open(f"config/{conf_file}") as config_file:
         logger.info(f'Abrindo {conf_file}')
-        for i, line in enumerate(config_file):
-            if i == 0:
-                modelo = line.split('=')[1].rstrip()
-            elif i == 1:
-                consultas = line.split('=')[1].rstrip()
-            elif i == 2:
-                resultados = line.split('=')[1].rstrip()
+        for line in config_file:
+            line = line.rstrip()
+
+            if line == "STEMMER":
+                stem = True
+                continue
+            elif line == "NOSTEMMER":
+                stem = False
+                continue
+
+            instruct, filename = line.split('=')
+
+            if instruct == "MODELO":
+                modelo = filename
+            elif instruct == "CONSULTAS":
+                consultas = filename
+            elif instruct == "RESULTADOS":
+                oldname, extension = filename.split('.')
+
+                if stem:
+                    resultados = oldname + "-stemmer." + extension
+                else:
+                    resultados = oldname + "-nostemmer." + extension
 
     matrix_dict = {}
 

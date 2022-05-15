@@ -64,7 +64,7 @@ def processador():
     with open(f"config/{conf_file}") as config_file:
         logger.info(f'Abrindo {conf_file}')
 
-        for i, line in enumerate(config_file):
+        for line in config_file:
             line = line.rstrip()
 
             if line == "STEMMER":
