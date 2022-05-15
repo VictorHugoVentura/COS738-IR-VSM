@@ -114,9 +114,6 @@ def write(filename, gli_dict):
         for key, value in sorted(gli_dict.items()):
             writer.writerow([key, value])
             lines_written += 1
-
-            if lines_written % 100 == 0:
-                logger.info(f'{lines_written} linhas escritas em {filename}')
         
         logger.info(f'{lines_written} linhas escritas em {filename}')
         logger.info(f'Fechando {filename}')
