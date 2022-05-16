@@ -121,13 +121,13 @@ def buscador():
                             query_dict[key] /= np.linalg.norm(list(query_vec.values())) * np.linalg.norm(weight_list)
             
             query_num += 1
-            sorted_values = sorted(query_dict.items(), key=lambda item: item[1], reverse=True)[:5]
+            sorted_values = sorted(query_dict.items(), key=lambda item: item[1], reverse=True)#[:100]
             
             with open(resultados, "a", newline='') as result_file:
                 result_writer = csv.writer(result_file, delimiter=";")
 
                 for i, elem in enumerate(sorted_values):
-                    li = [i + 1, sorted_values[i][0], sorted_values[i][1]]
+                    li = [i, elem[0], elem[1]]
                     result_writer.writerow([query[0], li])
                     result_lines += 1
 
