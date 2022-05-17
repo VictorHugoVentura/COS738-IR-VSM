@@ -92,16 +92,11 @@ def get_precision_at_k(stem, d, k):
         precision = np.delete(precision, missing_query)
         return precision
 
-def get_recall_at_k(stem, d, k, r_precision=False):
+def get_recall_at_k(stem, d, k=10, r_precision=False):
     if stem:
         results_path = "results/resultados-stemmer.csv"
     else:
         results_path = "results/resultados-nostemmer.csv"
-    
-    if r_precision:
-        num_rel_docs = np.zeros(num_of_queries)
-        for i, li in enumerate(d.values()):
-            num_rel_docs[i] = len(li)
     
     with open(results_path) as resultados:
         next(resultados)
@@ -114,15 +109,16 @@ def get_recall_at_k(stem, d, k, r_precision=False):
             results_list = ast.literal_eval(results_list)
             
             if r_precision:
-                k = num_rel_docs[query_num - 1]
-            
-            if results_list[0] >= k:
-                continue
+                if results_list[0] >= len(d[query_num]):
+                    continue
+            else:
+                if results_list[0] >= k:
+                    continue
 
             if results_list[1] in d[query_num]:
                 recall[query_num - 1] += 1
         
-        for i in range(1, num_of_queries + 1):
+        for i in d.keys():
             recall[i - 1] /= len(d[i])
 
         recall = np.delete(recall, missing_query)
