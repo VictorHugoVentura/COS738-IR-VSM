@@ -11,7 +11,7 @@ from buscador import main as buscador
 
 from metricas import (
     get_esperados_dict, get_interpolated_avg_precision,
-    get_precision_at_k, get_recall_at_k
+    get_precision_at_k, get_recall_at_k, get_mean_reciprocal_rank
 )
 
 
@@ -93,10 +93,10 @@ if __name__ == '__main__':
 
     stem = False
     #avaliador(stem)
-    d = get_esperados_dict()
-    
+    esperados_dict = get_esperados_dict()
+
     # 1. Gráfico de 11 pontos de precisão e recall
-    interpolated_avg_precision, thresholds, avg_precision = get_interpolated_avg_precision(stem, d)
+    interpolated_avg_precision, thresholds, avg_precision = get_interpolated_avg_precision(stem, esperados_dict)
 
     graphing_function(thresholds,
                     interpolated_avg_precision,
@@ -105,7 +105,7 @@ if __name__ == '__main__':
                     "Gráfico de 11 pontos de precisão média interpolada")
 
     # 2. Precision@5    
-    precision_5 = get_precision_at_k(stem, d, 5)
+    precision_5 = get_precision_at_k(stem, esperados_dict, 5)
 
     graphing_function(range(num_of_queries - 1),
                     precision_5,
@@ -114,7 +114,7 @@ if __name__ == '__main__':
                     "Precision@5")
     
     # 3. Precision@10
-    precision_10 = get_precision_at_k(stem, d, 10)
+    precision_10 = get_precision_at_k(stem, esperados_dict, 10)
 
     graphing_function(range(num_of_queries - 1),
                     precision_10,
@@ -123,7 +123,7 @@ if __name__ == '__main__':
                     "Precision@10")
 
     # 4. F1
-    recall_10 = get_recall_at_k(stem, d, 10)
+    recall_10 = get_recall_at_k(stem, esperados_dict, 10)
     f1_score = 2/(1/precision_10 + 1/recall_10)
 
     graphing_function(range(num_of_queries - 1),
@@ -133,14 +133,15 @@ if __name__ == '__main__':
                     "F1 score")
 
     # 5. Histograma de R-Precision (comparativo)
-    r_precision_stemmer = get_recall_at_k(True, d, r_precision=True)
-    r_precision_nostemmer = get_recall_at_k(False, d, r_precision=True)
+    r_precision_stemmer = get_recall_at_k(True, esperados_dict, r_precision=True)
+    r_precision_nostemmer = get_recall_at_k(False, esperados_dict, r_precision=True)
     histogram_func(r_precision_stemmer, r_precision_nostemmer, 30)
 
     # 6. MAP
     print("MAP", np.mean(avg_precision))
 
     # 7. MRR
+    print("MRR", get_mean_reciprocal_rank(stem, esperados_dict))
 
     # 8. Discounted Cumulative Gain (médio)
 

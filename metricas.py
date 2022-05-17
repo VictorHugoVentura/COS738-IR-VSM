@@ -88,9 +88,9 @@ def get_precision_at_k(stem, d, k):
             if results_list[1] in d[query_num]:
                 precision[query_num - 1] += 1
         
-        precision /= k
-        precision = np.delete(precision, missing_query)
-        return precision
+    precision /= k
+    precision = np.delete(precision, missing_query)
+    return precision
 
 def get_recall_at_k(stem, d, k=10, r_precision=False):
     if stem:
@@ -123,3 +123,24 @@ def get_recall_at_k(stem, d, k=10, r_precision=False):
 
         recall = np.delete(recall, missing_query)
         return recall
+
+def get_mean_reciprocal_rank(stem, d):
+    if stem:
+        results_path = "results/resultados-stemmer.csv"
+    else:
+        results_path = "results/resultados-nostemmer.csv"
+
+    with open(results_path) as resultados:
+        next(resultados)
+        reciprocal_rank = np.zeros(num_of_queries)
+
+        for line in resultados:
+            line = line.rstrip()
+            query_num, results_list = line.split(";")
+            query_num = int(query_num)
+            results_list = ast.literal_eval(results_list)
+        
+            if reciprocal_rank[query_num - 1] == 0 and results_list[1] in d[query_num]:
+                reciprocal_rank[query_num - 1] = 1/(results_list[0] + 1)
+
+    return np.mean(reciprocal_rank)
