@@ -57,6 +57,15 @@ def graphing_function(x, y, xlabel, ylabel, title):
     plt.ylabel(ylabel)
     plt.show()
 
+def histogram_func(x, y, num_bins):
+    bins = np.linspace(0, 1, num_bins)
+    plt.style.use('seaborn-deep')
+    plt.hist([x, y], bins, label=['stemmer', 'nostemmer'])
+    plt.legend(loc='upper right')
+    plt.xlabel("R-precision")
+    plt.ylabel("Número de consultas")
+    plt.show()
+
 def avaliador(stem):
     if stem:
         logger.info("Começando execução com stemmer")
@@ -85,6 +94,7 @@ if __name__ == '__main__':
     stem = False
     #avaliador(stem)
     d = get_esperados_dict()
+    
     # 1. Gráfico de 11 pontos de precisão e recall
     interpolated_avg_precision, thresholds, avg_precision = get_interpolated_avg_precision(stem, d)
 
@@ -123,6 +133,9 @@ if __name__ == '__main__':
                     "F1 score")
 
     # 5. Histograma de R-Precision (comparativo)
+    r_precision_stemmer = get_recall_at_k(True, d, r_precision=True)
+    r_precision_nostemmer = get_recall_at_k(False, d, r_precision=True)
+    histogram_func(r_precision_stemmer, r_precision_nostemmer, 30)
 
     # 6. MAP
     print("MAP", np.mean(avg_precision))
