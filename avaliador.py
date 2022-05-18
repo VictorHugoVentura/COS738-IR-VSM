@@ -11,7 +11,8 @@ from buscador import main as buscador
 
 from metricas import (
     get_esperados_dict, get_interpolated_avg_precision,
-    get_precision_at_k, get_recall_at_k, get_mean_reciprocal_rank
+    get_precision_at_k, get_recall_at_k,
+    get_mean_reciprocal_rank, get_discounted_cumulative_gain
 )
 
 
@@ -138,11 +139,19 @@ if __name__ == '__main__':
     histogram_func(r_precision_stemmer, r_precision_nostemmer, 30)
 
     # 6. MAP
-    print("MAP", np.mean(avg_precision))
+    print("MAP:", np.mean(avg_precision))
 
     # 7. MRR
-    print("MRR", get_mean_reciprocal_rank(stem, esperados_dict))
+    print("MRR:", get_mean_reciprocal_rank(stem, esperados_dict))
 
     # 8. Discounted Cumulative Gain (médio)
+    esp_votes_dict = get_esperados_dict(votes=True)
+    mean_cumulative_gain = get_discounted_cumulative_gain(stem, esp_votes_dict, 10)
+
+    graphing_function(range(10),
+                mean_cumulative_gain,
+                "Rank das consultas",
+                "DCG",
+                "Discounted Cumulative Gain (médio)")
 
     # 9. Normalized Discounted Cumulative Gain
