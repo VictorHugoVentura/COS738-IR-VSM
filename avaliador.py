@@ -154,3 +154,10 @@ if __name__ == '__main__':
                 "Discounted Cumulative Gain (médio)")
 
     # 9. Normalized Discounted Cumulative Gain
+    norm_mean_cumulative_gain = get_discounted_cumulative_gain(stem, esperados_dict, 10, normalized=True)
+
+    graphing_function(range(10),
+                norm_mean_cumulative_gain,
+                "Rank das consultas",
+                "NDCG",
+                "Normalized Discounted Cumulative Gain")

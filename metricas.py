@@ -145,13 +145,35 @@ def get_mean_reciprocal_rank(stem, d):
             if reciprocal_rank[query_num - 1] == 0 and results_list[1] in d[query_num][0]:
                 reciprocal_rank[query_num - 1] = 1/(results_list[0] + 1)
 
+    reciprocal_rank = np.delete(reciprocal_rank, missing_query)
     return np.mean(reciprocal_rank)
 
-def get_discounted_cumulative_gain(stem, d, k):
+def get_discounted_cumulative_gain(stem, d, k, normalized=False):
     if stem:
         results_path = "results/resultados-stemmer.csv"
     else:
         results_path = "results/resultados-nostemmer.csv"
+    
+    if normalized:
+        ideal_gain = np.zeros((num_of_queries, k))
+        ideal_s = 0
+
+        for q in d.keys():
+            ideal_seq = sorted(d[q][1], reverse=True)[:k]
+            
+            while len(ideal_seq) < k:
+                ideal_seq.append(0)
+
+            ideal_seq = [x/log2(i + 2) for i, x in enumerate(ideal_seq)]
+            
+            ideal_s = ideal_seq[0]
+            for i in range(1, k):
+                ideal_s += ideal_seq[i]
+                ideal_seq[i] = ideal_s
+            
+            ideal_gain[q - 1] = ideal_seq
+        
+        ideal_gain = np.delete(ideal_gain, missing_query, 0)
 
     with open(results_path) as resultados:
         next(resultados)
@@ -168,14 +190,18 @@ def get_discounted_cumulative_gain(stem, d, k):
             if doc_rank >= k:
                 continue
 
-            if doc_num in d[query_num][0]:
-                if doc_rank == 0:
-                    s = 0
+            if doc_rank == 0:
+                s = 0
 
+            if doc_num in d[query_num][0]:
                 doc_index = d[query_num][0].index(doc_num)
                 s += d[query_num][1][doc_index]/log2(doc_rank + 2)
 
             cumulative_gain[query_num - 1][doc_rank] = s
-
-    return np.mean(cumulative_gain, axis=0)
+    
+    cumulative_gain = np.delete(cumulative_gain, missing_query, 0)
         
+    if normalized:
+        return np.mean(cumulative_gain, axis=0)/np.mean(ideal_gain, axis=0)
+    else:
+        return np.mean(cumulative_gain, axis=0)
