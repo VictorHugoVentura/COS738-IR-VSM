@@ -7,6 +7,8 @@ Módulos:
 2. gerador.py - Gerador de lista invertida.
 3. indexador.py - Cria o modelo vetorial.
 4. buscador.py - Buscador, responsável pelos resultados finais.
+5. avaliador.py - Faz os gráficos e os arquivos de avaliação.
+6. metricas.py - Contém as medidas de avaliação do sistema.
 
 Arquivos gerados pelo sistema
 --
@@ -18,4 +20,4 @@ Arquivos gerados pelo sistema
 
 Como executar
 --
-Os módulos devem ser executados na ordem 1 -> 2 -> 3 -> 4. Se os arquivos da pasta results já foram gerados, os módulos podem ser executados em qualquer ordem.
+Os módulos devem ser executados na ordem 1 -> 2 -> 3 -> 4 -> 5. Se os arquivos da pasta results já foram gerados, os módulos podem ser executados em qualquer ordem.
