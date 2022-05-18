@@ -10,23 +10,17 @@ num_of_queries = 100
 num_of_docs = 1239
 missing_query = 92 # query 93 is missing
 
-def get_esperados_dict(votes=False):
+def get_esperados_dict():
     with open("results/esperados.csv") as esperados:
         next(esperados)
-        if votes:
-            d = defaultdict(lambda: ([], []))
-        else:
-            d = defaultdict(list)
+        d = defaultdict(lambda: ([], []))
 
         for line in esperados:
             line = line.rstrip()
             query_num, doc_num, doc_votes = line.split(";")
+            d[int(query_num)][0].append(int(doc_num))
+            d[int(query_num)][1].append(int(doc_votes))
 
-            if votes:
-                d[int(query_num)][0].append(int(doc_num))
-                d[int(query_num)][1].append(int(doc_votes))
-            else:
-                d[int(query_num)].append(int(doc_num))
     return d
 
 def get_interpolated_avg_precision(stem, d):
@@ -46,7 +40,7 @@ def get_interpolated_avg_precision(stem, d):
             query_num = int(query_num)
             results_list = ast.literal_eval(results_list)
             
-            if results_list[1] in d[query_num]:
+            if results_list[1] in d[query_num][0]:
                 Y[query_num - 1][results_list[0]] = 1
             else:
                 Y[query_num - 1][results_list[0]] = 0
@@ -93,7 +87,7 @@ def get_precision_at_k(stem, d, k):
             if results_list[0] >= k:
                 continue
 
-            if results_list[1] in d[query_num]:
+            if results_list[1] in d[query_num][0]:
                 precision[query_num - 1] += 1
         
     precision /= k
@@ -117,17 +111,17 @@ def get_recall_at_k(stem, d, k=10, r_precision=False):
             results_list = ast.literal_eval(results_list)
             
             if r_precision:
-                if results_list[0] >= len(d[query_num]):
+                if results_list[0] >= len(d[query_num][0]):
                     continue
             else:
                 if results_list[0] >= k:
                     continue
 
-            if results_list[1] in d[query_num]:
+            if results_list[1] in d[query_num][0]:
                 recall[query_num - 1] += 1
         
         for i in d.keys():
-            recall[i - 1] /= len(d[i])
+            recall[i - 1] /= len(d[i][0])
 
         recall = np.delete(recall, missing_query)
         return recall
@@ -148,7 +142,7 @@ def get_mean_reciprocal_rank(stem, d):
             query_num = int(query_num)
             results_list = ast.literal_eval(results_list)
         
-            if reciprocal_rank[query_num - 1] == 0 and results_list[1] in d[query_num]:
+            if reciprocal_rank[query_num - 1] == 0 and results_list[1] in d[query_num][0]:
                 reciprocal_rank[query_num - 1] = 1/(results_list[0] + 1)
 
     return np.mean(reciprocal_rank)

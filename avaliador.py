@@ -145,8 +145,7 @@ if __name__ == '__main__':
     print("MRR:", get_mean_reciprocal_rank(stem, esperados_dict))
 
     # 8. Discounted Cumulative Gain (médio)
-    esp_votes_dict = get_esperados_dict(votes=True)
-    mean_cumulative_gain = get_discounted_cumulative_gain(stem, esp_votes_dict, 10)
+    mean_cumulative_gain = get_discounted_cumulative_gain(stem, esperados_dict, 10)
 
     graphing_function(range(10),
                 mean_cumulative_gain,
